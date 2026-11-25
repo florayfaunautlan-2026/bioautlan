@@ -64,6 +64,20 @@
     .modal-section { margin-bottom: var(--sp-2); }
     .modal-section h4 { margin: 0 0 4px; font-size: 14px; color: var(--text-main); }
     .modal-section p { margin: 0; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+.kpi-banner {
+      background: linear-gradient(135deg, var(--success), #1B5E4A);
+      color: white; border-radius: var(--radius); padding: var(--sp-3);
+      text-align: center; margin-bottom: var(--sp-3);
+      box-shadow: 0 4px 12px rgba(36, 122, 97, 0.2);
+    }
+    .kpi-number { font-size: 38px; font-weight: 800; line-height: 1.1; margin: 0; }
+    .kpi-label { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9; margin: 6px 0 0; }
+    .especie-count {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 10px; font-weight: 600; margin-top: 4px; margin-left: 4px;
+      background: #F3EBF8; color: var(--accent);
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 </head>
@@ -149,6 +163,10 @@
   </main>
 
   <main id="vistaRanking" class="container" style="display: none; margin-top: 16px;">
+    <div class="kpi-banner">
+      <p id="totalObsNumber" class="kpi-number">0</p>
+      <p class="kpi-label">Observaciones aprobadas</p>
+    </div>
     <section class="card">
       <h2>Tabla de Líderes</h2>
       <ul id="rankingList" class="ranking-list">
@@ -211,11 +229,15 @@
 
     async function cargarRanking() {
       const list = document.getElementById('rankingList');
+      const totalEl = document.getElementById('totalObsNumber');
       list.innerHTML = '<li style="text-align: center; color: var(--text-muted); padding: 40px 0;">Cargando puntos...</li>';
       try {
         const res = await fetch(API_URL + '?action=ranking');
-        const ranking = await res.json();
-        if (!ranking || ranking.length === 0) {
+        const data = await res.json();
+        const ranking = data.ranking || [];
+        totalEl.textContent = (data.totalObservaciones || 0).toLocaleString('es-MX');
+
+        if (ranking.length === 0) {
           list.innerHTML = '<li style="text-align: center; color: var(--text-muted); padding: 40px 0;">Aún no hay puntos registrados.</li>';
           return;
         }
@@ -247,7 +269,8 @@
         let html = '';
         especies.forEach((esp, index) => {
           const imgUrl = esp.fotoUrl || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23E0E0E0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239e9e9e" font-family="sans-serif" font-size="14px">Sin Foto</text></svg>';
-          html += '<div class="especie-card" onclick="abrirModal(' + index + ')"><img src="' + imgUrl + '" alt="' + esp.nombreComun + '" class="especie-img"><div class="especie-info"><h3 class="especie-nombre">' + esp.nombreComun + '</h3><p class="especie-cientifico">' + esp.nombreCientifico + '</p><span class="especie-tag">' + (esp.estatus || 'Registrado') + '</span></div></div>';
+          const obsTexto = (esp.observaciones || 0) === 1 ? '1 obs.' : (esp.observaciones || 0) + ' obs.';
+          html += '<div class="especie-card" onclick="abrirModal(' + index + ')"><img src="' + imgUrl + '" alt="' + esp.nombreComun + '" class="especie-img"><div class="especie-info"><h3 class="especie-nombre">' + esp.nombreComun + '</h3><p class="especie-cientifico">' + esp.nombreCientifico + '</p><div><span class="especie-tag">' + (esp.estatus || 'Registrado') + '</span><span class="especie-count">' + obsTexto + '</span></div></div></div>';
         });
         grid.innerHTML = html;
       } catch (err) {
