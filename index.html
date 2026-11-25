@@ -78,6 +78,17 @@
       font-size: 10px; font-weight: 600; margin-top: 4px; margin-left: 4px;
       background: #F3EBF8; color: var(--accent);
     }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-2);
+      margin-bottom: var(--sp-3);
+    }
+    .kpi-grid .kpi-banner { margin-bottom: 0; }
+    .kpi-banner.pendientes {
+      background: linear-gradient(135deg, #D97706, #B45309);
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 </head>
@@ -163,9 +174,15 @@
   </main>
 
   <main id="vistaRanking" class="container" style="display: none; margin-top: 16px;">
-    <div class="kpi-banner">
-      <p id="totalObsNumber" class="kpi-number">0</p>
-      <p class="kpi-label">Observaciones aprobadas</p>
+    <div class="kpi-grid">
+      <div class="kpi-banner">
+        <p id="totalObsNumber" class="kpi-number">0</p>
+        <p class="kpi-label">Aprobadas</p>
+      </div>
+      <div class="kpi-banner pendientes">
+        <p id="totalPendientesNumber" class="kpi-number">0</p>
+        <p class="kpi-label">Pendientes</p>
+      </div>
     </div>
     <section class="card">
       <h2>Tabla de Líderes</h2>
@@ -181,7 +198,10 @@
       <img id="modalImg" class="modal-img" src="" alt="">
       <h3 id="modalTitulo" class="modal-title"></h3>
       <p id="modalSubtitulo" class="modal-subtitle"></p>
-      <span id="modalEstatus" class="especie-tag" style="margin-bottom: 16px; display: inline-block;"></span>
+      <div style="margin-bottom: 16px;">
+        <span id="modalEstatus" class="especie-tag" style="margin-top: 0;"></span>
+        <span id="modalObservaciones" class="especie-count" style="font-size: 12px; padding: 3px 10px;"></span>
+      </div>
       <div class="modal-section">
         <h4>Hábitat</h4>
         <p id="modalHabitat"></p>
@@ -235,7 +255,9 @@
         const res = await fetch(API_URL + '?action=ranking');
         const data = await res.json();
         const ranking = data.ranking || [];
+        
         totalEl.textContent = (data.totalObservaciones || 0).toLocaleString('es-MX');
+        document.getElementById('totalPendientesNumber').textContent = (data.totalPendientes || 0).toLocaleString('es-MX');
 
         if (ranking.length === 0) {
           list.innerHTML = '<li style="text-align: center; color: var(--text-muted); padding: 40px 0;">Aún no hay puntos registrados.</li>';
@@ -285,6 +307,8 @@
       document.getElementById('modalTitulo').textContent = especie.nombreComun;
       document.getElementById('modalSubtitulo').textContent = especie.nombreCientifico;
       document.getElementById('modalEstatus').textContent = especie.estatus || 'Registrado';
+      const obs = especie.observaciones || 0;
+      document.getElementById('modalObservaciones').textContent = obs === 1 ? '1 observación' : obs + ' observaciones';
       document.getElementById('modalHabitat').textContent = especie.habitat || 'No especificado';
       document.getElementById('modalCaracteristicas').textContent = especie.caracteristicas || 'No especificadas';
       document.getElementById('especieModal').style.display = 'flex';
